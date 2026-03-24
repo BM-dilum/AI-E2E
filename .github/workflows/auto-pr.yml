@@ -53,6 +53,13 @@ jobs:
                         'CodeRabbit will automatically review this PR...'
                         ].join('\n')
 
+                        //get default branch
+                        const {data: repoData} = await github.rest.repos.get({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo
+                        })
+                        const defaultBranch = repoData.default_branch
+
                         const { data: prs } = await github.rest.pulls.list({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
@@ -66,7 +73,7 @@ jobs:
                             repo: context.repo.repo,
                             title: prTitle,
                             head: branch,
-                            base: 'main',
+                            base: defaultBranch,
                             body: body
                         })
                         }
