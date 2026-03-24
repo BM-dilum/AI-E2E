@@ -46,7 +46,7 @@ jobs:
                         'All tests passed before this PR was opened',
                         '',
                         '## CodeRabbit',
-                        'CodeRabbit will automatically review this PR.'
+                        'CodeRabbit will automatically review this PR..'
                         ].join('\n')
 
                         const { data: prs } = await github.rest.pulls.list({
