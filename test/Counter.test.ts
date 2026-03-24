@@ -69,7 +69,7 @@ describe("Counter", function () {
     });
 
     it("decrement reverts when count is zero", async function () {
-      await expect(counter.decrement()).to.be.revertedWith("Count is zero");
+      await expect(counter.decrement()).to.be.revertedWith("Counter is zero");
     });
   });
 

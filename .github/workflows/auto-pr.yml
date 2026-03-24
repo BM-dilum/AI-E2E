@@ -12,7 +12,6 @@ permissions:
 jobs:
     test-and-pr:
         runs-on: ubuntu-latest
-
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -26,78 +25,10 @@ jobs:
               run: npx hardhat compile
 
             - name: Run tests
-              id: run_tests
               run: npx hardhat test
-              continue-on-error: true
-
-            - name: Comment on PR if tests fail
-              if: steps.run_tests.outcome == 'failure'
-              uses: actions/github-script@v7
-              env:
-                  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-              with:
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  script: |
-                      const branch = context.ref.replace('refs/heads/', '')
-
-                      // get default branch
-                      const { data: repoData } = await github.rest.repos.get({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo
-                      })
-                      const defaultBranch = repoData.default_branch
-
-                      // check if PR already exists
-                      const { data: prs } = await github.rest.pulls.list({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        head: context.repo.owner + ':' + branch,
-                        state: 'open'
-                      })
-
-                      if (prs.length > 0) {
-                        // PR exists — add comment asking Copilot to fix
-                        await github.rest.issues.createComment({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          issue_number: prs[0].number,
-                          body: [
-                            '## Tests Failed',
-                            '',
-                            'Tests failed on latest push. @copilot please:',
-                            '1. Review the failing tests',
-                            '2. Fix the contract or test to make all tests pass',
-                            '3. Push the fix to this branch'
-                          ].join('\n')
-                        })
-                      } else {
-                        // no PR yet — create one with failure status
-                        const prTitle = branch
-                          .replace(/^feat\//, '')
-                          .replace(/-/g, ' ')
-                          .replace(/\b\w/g, l => l.toUpperCase())
-
-                        await github.rest.pulls.create({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          title: prTitle,
-                          head: branch,
-                          base: defaultBranch,
-                          body: [
-                            '## Summary',
-                            'Auto generated PR from branch: `' + branch + '`',
-                            '',
-                            '## Tests',
-                            'Tests are currently failing — @copilot please fix and push.',
-                            '',
-                            '## CodeRabbit',
-                            'CodeRabbit will review once tests pass.'
-                          ].join('\n')
-                        })
-                      }
 
             - name: Create PR if tests pass
-              if: steps.run_tests.outcome == 'success'
+              if: success()
               uses: actions/github-script@v7
               env:
                   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -106,66 +37,43 @@ jobs:
                   script: |
                       const branch = context.ref.replace('refs/heads/', '')
 
-                      const prTitle = branch
+                        const prTitle = branch
                         .replace(/^feat\//, '')
                         .replace(/-/g, ' ')
                         .replace(/\b\w/g, l => l.toUpperCase())
 
-                      const body = [
+                        const body = [
                         '## Summary',
                         'Auto generated PR from branch: `' + branch + '`',
                         '',
                         '## Tests',
-                        'All tests passed before this PR was opened',
+                        'All tests passed before this PR was opened !',
                         '',
                         '## CodeRabbit',
-                        'CodeRabbit will automatically review this PR.'
-                      ].join('\n')
+                        'CodeRabbit will automatically review this PR...'
+                        ].join('\n')
 
-                      // get default branch
-                      const { data: repoData } = await github.rest.repos.get({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo
-                      })
-                      const defaultBranch = repoData.default_branch
+                        //get default branch
+                        const {data: repoData} = await github.rest.repos.get({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo
+                        })
+                        const defaultBranch = repoData.default_branch
 
-                      // check if PR already exists
-                      const { data: prs } = await github.rest.pulls.list({
+                        const { data: prs } = await github.rest.pulls.list({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
                         head: context.repo.owner + ':' + branch,
                         state: 'open'
-                      })
+                        })
 
-                      if (prs.length === 0) {
-                        // create new PR
+                        if (prs.length === 0) {
                         await github.rest.pulls.create({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          title: prTitle,
-                          head: branch,
-                          base: defaultBranch,
-                          body: body
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            title: prTitle,
+                            head: branch,
+                            base: defaultBranch,
+                            body: body
                         })
-                      } else {
-                        // PR exists — update body to show tests now pass
-                        await github.rest.pulls.update({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          pull_number: prs[0].number,
-                          body: body
-                        })
-
-                        // add success comment
-                        await github.rest.issues.createComment({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          issue_number: prs[0].number,
-                          body: [
-                            '## Tests Passing',
-                            '',
-                            'All tests are now passing on latest push.',
-                            'CodeRabbit will review shortly.'
-                          ].join('\n')
-                        })
-                      }
+                        }
