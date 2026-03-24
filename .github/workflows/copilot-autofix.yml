@@ -3,11 +3,10 @@ name: Copilot Auto Fix
 on:
     pull_request_review:
         types: [submitted]
+
 jobs:
     auto-fix:
-        if: |
-            (github.event_name == 'pull_request_review' && 
-            contains(github.event.review.user.login, '@coderabbit'))
+        if: contains(github.event.review.user.login, 'coderabbit')
 
         runs-on: ubuntu-latest
         steps:
