@@ -34,13 +34,11 @@ describe("HelloWorld", function () {
 
   it("non owner cannot update message", async function () {
     await expect(
-      helloWorld.connect(other).setMessage("Unauthorized")
+      helloWorld.connect(other).setMessage("Unauthorized"),
     ).to.be.revertedWith("Not owner");
   });
 
   it("empty message reverts", async function () {
-    await expect(helloWorld.setMessage("")).to.be.revertedWith(
-      "Empty message"
-    );
+    await expect(helloWorld.setMessage("")).to.be.revertedWith("Empty message");
   });
 });
