@@ -52,19 +52,19 @@ describe("Counter", function () {
   describe("Failure Cases", function () {
     it("non owner cannot increment", async function () {
       await expect(counter.connect(other).increment()).to.be.revertedWith(
-        "Not owner"
+        "Not owner",
       );
     });
 
     it("non owner cannot decrement", async function () {
       await expect(counter.connect(other).decrement()).to.be.revertedWith(
-        "Not owner"
+        "Not owner",
       );
     });
 
     it("non owner cannot reset", async function () {
       await expect(counter.connect(other).reset()).to.be.revertedWith(
-        "Not owner"
+        "Not owner",
       );
     });
 
