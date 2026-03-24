@@ -47,7 +47,7 @@ jobs:
                         'Auto generated PR from branch: `' + branch + '`',
                         '',
                         '## Tests',
-                        'All tests passed before this PR was opened',
+                        'All tests passed before this PR was opened !',
                         '',
                         '## CodeRabbit',
                         'CodeRabbit will automatically review this PR...'
