@@ -1,0 +1,10 @@
+name: Copilot Setup
+steps:
+  - name: Install Dependencies
+    run: npm install
+
+  - name: Complie contracts
+    run: npx hardhat compile
+
+  - name: Run tests
+    run: npx hardhat test

@@ -1,0 +1,12 @@
+language: en
+reviews:
+  auto_review:
+    enabled: true
+    description_keyword: ""
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
+    drafts: false
+  poem: false
+  collapse_walkthrough: false
+chat:
+  auto_reply: true
