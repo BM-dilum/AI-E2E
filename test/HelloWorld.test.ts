@@ -36,10 +36,10 @@ describe("HelloWorld", function () {
       const HelloWorld = await ethers.getContractFactory("HelloWorld");
       const instance = await HelloWorld.deploy("Deploy Event");
       await instance.waitForDeployment();
-      
+
       const filter = instance.filters.MessageSet();
       const events = await instance.queryFilter(filter);
-      
+
       expect(events.length).to.equal(1);
       expect(events[0].args[0]).to.equal(owner.address);
       expect(events[0].args[1]).to.equal("Deploy Event");
@@ -60,13 +60,13 @@ describe("HelloWorld", function () {
 
     it("empty message on update reverts", async function () {
       await expect(helloWorld.setMessage("")).to.be.revertedWith(
-        "Empty message"
+        "Empty message",
       );
     });
 
     it("non owner update reverts", async function () {
       await expect(
-        helloWorld.connect(other).setMessage("Unauthorized")
+        helloWorld.connect(other).setMessage("Unauthorized"),
       ).to.be.revertedWith("Not owner");
     });
   });
