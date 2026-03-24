@@ -5,13 +5,11 @@ contract HelloWorld {
     string public message;
     address public owner;
 
-    event MessageSet(address indexed owner, string message);
+    event MessageUpdated(address owner, string message);
 
-    constructor(string memory _message) {
-        require(bytes(_message).length > 0, "Empty message");
+    constructor() {
         owner = msg.sender;
-        message = _message;
-        emit MessageSet(msg.sender, _message);
+        message = "Hello World";
     }
 
     modifier onlyOwner() {
@@ -26,6 +24,6 @@ contract HelloWorld {
     function setMessage(string memory newMessage) public onlyOwner {
         require(bytes(newMessage).length > 0, "Empty message");
         message = newMessage;
-        emit MessageSet(msg.sender, newMessage);
+        emit MessageUpdated(msg.sender, newMessage);
     }
 }
