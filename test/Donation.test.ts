@@ -1,3 +1,4 @@
+```typescript
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { Donation } from "../typechain-types";
@@ -15,7 +16,7 @@ describe("Donation", function () {
 
     const Donation = await ethers.getContractFactory("Donation");
     donation = await Donation.deploy();
-    await donation.waitForDeployment();
+    await donation.deployed();
   });
 
   describe("Happy Path", function () {
@@ -32,7 +33,7 @@ describe("Donation", function () {
     it("anyone can donate ETH", async function () {
       const amount = ethers.parseEther("1.0");
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount,
       });
       const donated = await donation.getDonation(donor1.address);
@@ -42,7 +43,7 @@ describe("Donation", function () {
     it("donations mapping updates correctly", async function () {
       const amount = ethers.parseEther("2.5");
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount,
       });
       const donated = await donation.getDonation(donor1.address);
@@ -52,7 +53,7 @@ describe("Donation", function () {
     it("totalDonations updates correctly", async function () {
       const amount = ethers.parseEther("3.0");
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount,
       });
       const total = await donation.getTotalDonations();
@@ -62,7 +63,7 @@ describe("Donation", function () {
     it("getDonation returns correct amount", async function () {
       const amount = ethers.parseEther("1.5");
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount,
       });
       const donated = await donation.getDonation(donor1.address);
@@ -74,16 +75,16 @@ describe("Donation", function () {
       const amount2 = ethers.parseEther("2.0");
       
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount1,
       });
       await donor2.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount2,
       });
       
       const total = await donation.getTotalDonations();
-      expect(total).to.equal(amount1 + amount2);
+      expect(total).to.equal(amount1.add(amount2));
     });
 
     it("multiple donors can donate", async function () {
@@ -91,11 +92,11 @@ describe("Donation", function () {
       const amount2 = ethers.parseEther("2.0");
       
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount1,
       });
       await donor2.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount2,
       });
       
@@ -105,29 +106,29 @@ describe("Donation", function () {
       
       expect(donated1).to.equal(amount1);
       expect(donated2).to.equal(amount2);
-      expect(total).to.equal(amount1 + amount2);
+      expect(total).to.equal(amount1.add(amount2));
     });
 
     it("owner can withdraw full balance", async function () {
       const amount = ethers.parseEther("5.0");
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount,
       });
       
-      const balanceBefore = await owner.provider!.getBalance(owner.address);
+      const balanceBefore = await owner.getBalance();
       const tx = await donation.withdraw();
       const receipt = await tx.wait();
-      const gasCost = receipt!.gasUsed * receipt!.gasPrice;
+      const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
       
-      const balanceAfter = await owner.provider!.getBalance(owner.address);
-      expect(balanceAfter).to.equal(balanceBefore + amount - gasCost);
+      const balanceAfter = await owner.getBalance();
+      expect(balanceAfter).to.equal(balanceBefore.add(amount).sub(gasCost));
     });
 
     it("totalDonations resets to zero after withdraw", async function () {
       const amount = ethers.parseEther("3.0");
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount,
       });
       
@@ -139,7 +140,7 @@ describe("Donation", function () {
     it("withdrawn event emitted correctly", async function () {
       const amount = ethers.parseEther("2.0");
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount,
       });
       
@@ -159,7 +160,7 @@ describe("Donation", function () {
     it("non owner cannot withdraw", async function () {
       const amount = ethers.parseEther("1.0");
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount,
       });
       
@@ -177,7 +178,7 @@ describe("Donation", function () {
     it("constructor emits OwnerSet event", async function () {
       const Donation = await ethers.getContractFactory("Donation");
       const newDonation = await Donation.deploy();
-      await newDonation.waitForDeployment();
+      await newDonation.deployed();
       
       // Event is emitted during deployment
       expect(newDonation).to.not.be.null;
@@ -187,7 +188,7 @@ describe("Donation", function () {
       const amount = ethers.parseEther("1.0");
       await expect(
         donor1.sendTransaction({
-          to: await donation.getAddress(),
+          to: donation.address,
           value: amount,
         })
       )
@@ -198,7 +199,7 @@ describe("Donation", function () {
     it("withdraw emits Withdrawn event", async function () {
       const amount = ethers.parseEther("2.0");
       await donor1.sendTransaction({
-        to: await donation.getAddress(),
+        to: donation.address,
         value: amount,
       });
       
@@ -208,3 +209,4 @@ describe("Donation", function () {
     });
   });
 });
+```
