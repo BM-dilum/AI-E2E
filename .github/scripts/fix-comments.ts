@@ -58,7 +58,7 @@ async function run(): Promise<void> {
 
     try {
       // read file from Github
-      const { data: fileData } = octokit.rest.repos.getContent({
+      const { data: fileData } = await octokit.rest.repos.getContent({
         owner,
         repo,
         path: filePath,

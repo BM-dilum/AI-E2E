@@ -24,7 +24,7 @@ jobs:
             - name: Install dependencies
               run: |
                   cd .github/scripts
-                  npm install @octokit/rest groq-sdk typescript ts-node @types/node
+                  npm install @octokit/rest groq-sdk typescript tsx @types/node
 
             - name: Run fix script,
               env:
@@ -36,4 +36,4 @@ jobs:
                   REPO_NAME: ${{ github.event.repository.name }}
               run: |
                   cd .github/scripts 
-                  npx ts-node fix-comments.ts
+                  npx tsx fix-comments.ts
