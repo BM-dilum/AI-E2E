@@ -92,8 +92,13 @@ async function run(): Promise<void> {
             role: "system",
             content: `You are an expert software developer.
                         Fix the issues provided in the file.
-                        Return ONLY the complete fixed file content.
-                        No explanations. No markdown backticks. Raw code only.`,
+                        CRITICAL RULES:
+                        - Return ONLY the raw file content
+                        - Do NOT wrap in markdown code blocks
+                        - Do NOT use backticks
+                        - Do NOT add any explanation
+                        - Start your response with the first line of code
+                        - End your response with the last line of code`,
           },
           {
             role: "user",

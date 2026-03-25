@@ -1,4 +1,3 @@
-```typescript
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { Donation } from "../typechain-types";
@@ -73,7 +72,7 @@ describe("Donation", function () {
     it("getTotalDonations returns correct amount", async function () {
       const amount1 = ethers.parseEther("1.0");
       const amount2 = ethers.parseEther("2.0");
-      
+
       await donor1.sendTransaction({
         to: donation.address,
         value: amount1,
@@ -82,7 +81,7 @@ describe("Donation", function () {
         to: donation.address,
         value: amount2,
       });
-      
+
       const total = await donation.getTotalDonations();
       expect(total).to.equal(amount1.add(amount2));
     });
@@ -90,7 +89,7 @@ describe("Donation", function () {
     it("multiple donors can donate", async function () {
       const amount1 = ethers.parseEther("1.0");
       const amount2 = ethers.parseEther("2.0");
-      
+
       await donor1.sendTransaction({
         to: donation.address,
         value: amount1,
@@ -99,11 +98,11 @@ describe("Donation", function () {
         to: donation.address,
         value: amount2,
       });
-      
+
       const donated1 = await donation.getDonation(donor1.address);
       const donated2 = await donation.getDonation(donor2.address);
       const total = await donation.getTotalDonations();
-      
+
       expect(donated1).to.equal(amount1);
       expect(donated2).to.equal(amount2);
       expect(total).to.equal(amount1.add(amount2));
@@ -115,12 +114,12 @@ describe("Donation", function () {
         to: donation.address,
         value: amount,
       });
-      
+
       const balanceBefore = await owner.getBalance();
       const tx = await donation.withdraw();
       const receipt = await tx.wait();
       const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
-      
+
       const balanceAfter = await owner.getBalance();
       expect(balanceAfter).to.equal(balanceBefore.add(amount).sub(gasCost));
     });
@@ -131,7 +130,7 @@ describe("Donation", function () {
         to: donation.address,
         value: amount,
       });
-      
+
       await donation.withdraw();
       const total = await donation.getTotalDonations();
       expect(total).to.equal(0);
@@ -143,7 +142,7 @@ describe("Donation", function () {
         to: donation.address,
         value: amount,
       });
-      
+
       await expect(donation.withdraw())
         .to.emit(donation, "Withdrawn")
         .withArgs(owner.address, amount);
@@ -152,9 +151,9 @@ describe("Donation", function () {
 
   describe("Failure Cases", function () {
     it("zero donation reverts", async function () {
-      await expect(
-        donation.donate({ value: 0 })
-      ).to.be.revertedWith("No ETH sent");
+      await expect(donation.donate({ value: 0 })).to.be.revertedWith(
+        "No ETH sent",
+      );
     });
 
     it("non owner cannot withdraw", async function () {
@@ -163,9 +162,9 @@ describe("Donation", function () {
         to: donation.address,
         value: amount,
       });
-      
+
       await expect(donation.connect(other).withdraw()).to.be.revertedWith(
-        "Not owner"
+        "Not owner",
       );
     });
 
@@ -179,7 +178,7 @@ describe("Donation", function () {
       const Donation = await ethers.getContractFactory("Donation");
       const newDonation = await Donation.deploy();
       await newDonation.deployed();
-      
+
       // Event is emitted during deployment
       expect(newDonation).to.not.be.null;
     });
@@ -190,7 +189,7 @@ describe("Donation", function () {
         donor1.sendTransaction({
           to: donation.address,
           value: amount,
-        })
+        }),
       )
         .to.emit(donation, "Donated")
         .withArgs(donor1.address, amount);
@@ -202,11 +201,10 @@ describe("Donation", function () {
         to: donation.address,
         value: amount,
       });
-      
+
       await expect(donation.withdraw())
         .to.emit(donation, "Withdrawn")
         .withArgs(owner.address, amount);
     });
   });
 });
-```
