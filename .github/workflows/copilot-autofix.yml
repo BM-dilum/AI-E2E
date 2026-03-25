@@ -7,58 +7,33 @@ on:
 jobs:
     auto-fix:
         if: contains(github.event.review.user.login, 'coderabbit')
-
         runs-on: ubuntu-latest
-        steps:
-            - name: Debug event payload
-              run: |
-                  echo "Event: ${{ github.event_name }}"                  
-                  echo "User: ${{ github.event.review.user.login  }}"
 
-            - name: Collect code rabbit comments
-              uses: actions/github-script@v7
+        steps:
+            - name: Checkout,
+              uses: actions/checkout@v4
               env:
                   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+            - name: Setup Node,
+              uses: actions/setup-node@v3,
               with:
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  script: |
-                      //get all review commnets
-                      const {data: comments} = await github.rest.pulls.listReviewComments({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          pull_number: context.payload.pull_request.number
-                      });
+                  node-version: "18"
+              env:
+                  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+            - name: Install dependencies
+              run: |
+                  cd .github/scripts
+                  npm install @octokit/rest groq-sdk typescript ts-node @types/node
 
-                      //filter only coderabbit comments
-                      const coderabbitComments = comments.filter(c => c.user.login.includes("coderabbit"))
-
-                      if (coderabbitComments.length === 0) {
-                          console.log("No CodeRabbit commnets found")
-                          return
-                      }
-                       
-                      //build summery of all comments
-                      const commentSummary = coderabbitComments.map((c,i) => 
-                        `{i+1}. File: ${c.path} Line: ${c.line}\n Issue: ${c.body}`
-                      ).join("\n")
-
-                      //asign copilot to PR
-                      await github.rest.issues.addAssignees({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        issue_number: context.payload.pull_request.number,
-                        assignees: ['copilot']
-                      })
-
-                      //post structured message for copilot
-                      await github.rest.issues.createComment({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        issue_number: context.payload.pull_request.number,
-                        body: [
-                                '@copilot please fix the following issues raised by CodeRabbit:',
-                                '',
-                                commentSummary,
-                                '',
-                                'Fix all issues above and push in a single commit to this branch.'
-                            ].join('\n')})
+            - name: Run fix script,
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+                  PR_NUMBER: ${{ github.event.pull_request.number }}
+                  BRANCH: ${{ github.event.pull_request.head.ref }}
+                  REPO_OWNER: ${{ github.repository_owner }}
+                  REPO_NAME: ${{ github.event.repository.name }}
+              run: |
+                  cd .github/scripts 
+                  npx ts-node fix-comments.ts
