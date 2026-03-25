@@ -92,13 +92,19 @@ async function run(): Promise<void> {
             role: "system",
             content: `You are an expert software developer.
                         Fix the issues provided in the file.
-                        CRITICAL RULES:
+                        CRITICAL RULES:                        
                         - Return ONLY the raw file content
                         - Do NOT wrap in markdown code blocks
                         - Do NOT use backticks
                         - Do NOT add any explanation
                         - Start your response with the first line of code
-                        - End your response with the last line of code`,
+                        - End your response with the last line of code
+                        ALWAYS:
+                        - test must be passed   
+                        -If any tests fail fix them and run again
+                            Keep fixing and running until all tests pass
+                            Do not stop until you see 0 failing  
+                        `,
           },
           {
             role: "user",
