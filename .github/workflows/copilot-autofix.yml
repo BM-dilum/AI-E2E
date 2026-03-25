@@ -42,6 +42,14 @@ jobs:
                         `{i+1}. File: ${c.path} Line: ${c.line}\n Issue: ${c.body}`
                       ).join("\n")
 
+                      //asign copilot to PR
+                      await github.rest.issues.addAssignees({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: context.payload.pull_request.number,
+                        assignees: ['copilot']
+                      })
+
                       //post structured message for copilot
                       await github.rest.issues.createComment({
                         owner: context.repo.owner,
@@ -54,14 +62,3 @@ jobs:
                                 '',
                                 'Fix all issues above and push in a single commit to this branch.'
                             ].join('\n')})
-
-            - name: Trigger Copilot to fix review comments
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                      await github.rest.issues.createComment({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        issue_number: context.payload.pull_request.number,
-                        body: "@copilot please address all CodeRabbit review comments and update this PR"
-                      });
