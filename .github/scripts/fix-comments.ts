@@ -1,5 +1,7 @@
 import Groq from "groq-sdk";
 import { Octokit } from "octokit";
+import * as fs from "fs";
+import * as path from "path";
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -8,6 +10,7 @@ const owner = process.env.REPO_OWNER as string;
 const repo = process.env.REPO_NAME as string;
 const prNumber = parseInt(process.env.PR_NUMBER as string);
 const branch = process.env.BRANCH as string;
+const repoRoot = process.env.REPO_ROOT as string;
 
 interface Issue {
   line: number;
@@ -40,7 +43,6 @@ async function run(): Promise<void> {
   console.log(`📥 Found ${coderabbitComments.length} CodeRabbit comments`);
 
   //step 2: group comments by files
-
   const byFile: FileIssues = {};
   for (const comment of coderabbitComments) {
     if (!byFile[comment.path]) byFile[comment.path] = [];
@@ -50,6 +52,8 @@ async function run(): Promise<void> {
     });
   }
 
+  console.log("🧾 coderabbit-comments: ", coderabbitComments);
+
   const fixedFiles: string[] = [];
 
   //step 3.fix each file
@@ -57,8 +61,12 @@ async function run(): Promise<void> {
     console.log(`🕖 Processing ${filePath} — ${issues.length} issue(s)`);
 
     try {
+      const localPath = path.join(repoRoot, filePath);
+      console.log("📁 fixing file at ", localPath);
+      const fileContent = fs.readFileSync(localPath, "utf8");
+
       // read file from Github
-      const { data: fileData } = octokit.rest.repos.getContent({
+      const { data: fileData } = await octokit.rest.repos.getContent({
         owner,
         repo,
         path: filePath,
@@ -69,10 +77,6 @@ async function run(): Promise<void> {
         console.error(`❌ ${filePath} is not a file — skipping`);
         continue;
       }
-
-      const fileContent = Buffer.from(fileData.content, "base64").toString(
-        "utf8",
-      );
 
       // format issues
       const issueList = issues
@@ -91,8 +95,19 @@ async function run(): Promise<void> {
             role: "system",
             content: `You are an expert software developer.
                         Fix the issues provided in the file.
-                        Return ONLY the complete fixed file content.
-                        No explanations. No markdown backticks. Raw code only.`,
+                        CRITICAL RULES:                        
+                        - Return ONLY the raw file content
+                        - Do NOT wrap in markdown code blocks
+                        - Do NOT use backticks
+                        - Do NOT add any explanation
+                        - Start your response with the first line of code
+                        - End your response with the last line of code
+                        ALWAYS:
+                        - test must be passed   
+                        -If any tests fail fix them and run again
+                            Keep fixing and running until all tests pass
+                            Do not stop until you see 0 failing  
+                        `,
           },
           {
             role: "user",
@@ -113,20 +128,31 @@ async function run(): Promise<void> {
         continue;
       }
 
-      //push file back to github
-
-      await octokit.rest.repos.createOrUpdateFileContents({
-        owner,
-        repo,
-        path: filePath,
-        message: `fix: address CodeRabbit comments in ${filePath}`,
-        content: Buffer.from(fixedContent).toString("base64"),
-        sha: fileData.sha,
-        branch,
-      });
+      // write to the localfile
+      fs.writeFileSync(localPath, fixedContent, "utf8");
 
       fixedFiles.push(filePath);
       console.log(`✅ Fixed and pushed ${filePath}`);
+
+      if (fixedFiles.length > 0) {
+        await octokit.rest.issues.createComment({
+          owner,
+          repo,
+          issue_number: prNumber,
+          body: [
+            "## Auto Fix Complete ✅",
+            "",
+            `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
+            "",
+            "**Files fixed:**",
+            ...fixedFiles.map((f) => `- \`${f}\``),
+            "",
+            "CodeRabbit will re-review shortly.",
+          ].join("\n"),
+        });
+      }
+
+      console.log(`Done — fixed ${fixedFiles.length} files`);
     } catch (error) {
       if (error instanceof Error) {
         console.error(`❌ Failed to fix ${filePath}: ${error.message}`);

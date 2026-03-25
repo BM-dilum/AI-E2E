@@ -12,8 +12,16 @@ jobs:
         steps:
             - name: Checkout,
               uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.ref}}
+                  fetch-depth: 0
               env:
                   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+            - name: Setup Git,
+              run: |
+                  git config --global user.name "github-actions"
+                  git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
             - name: Setup Node,
               uses: actions/setup-node@v4
@@ -21,10 +29,11 @@ jobs:
                   node-version: "18"
               env:
                   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
             - name: Install dependencies
               run: |
                   cd .github/scripts
-                  npm install @octokit/rest groq-sdk typescript ts-node @types/node
+                  npm install @octokit/rest groq-sdk typescript tsx @types/node
 
             - name: Run fix script,
               env:
@@ -34,6 +43,39 @@ jobs:
                   BRANCH: ${{ github.event.pull_request.head.ref }}
                   REPO_OWNER: ${{ github.repository_owner }}
                   REPO_NAME: ${{ github.event.repository.name }}
+                  REPO_ROOT: ${{ github.workspace }}
               run: |
                   cd .github/scripts 
-                  npx ts-node fix-comments.ts
+                  npx tsx fix-comments.ts
+
+            - name: Commit and Push changes
+              if: success()
+              run: |
+                  git add .
+                  git diff --staged --quiet || git commit -m "fix: address CodeRabbit comments"  
+                  git push origin ${{ github.event.pull_request.head.ref }}
+
+            - name: Trigger CodeRabbit Review
+              if: success()
+              uses: actions/github-script@v7
+              env:
+                  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN}}
+                  script: |
+                      const branch = context.ref.replace("refs/heads/", "")
+
+                      const {data: prs} = await github.rest.pulls.list({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          head: context.repo.owner + ":" + branch,
+                          state: "open"
+                      })
+
+                      if (prs.length > 0) {
+                          await github.rest.issues.createComment({
+                              owner: context.repo.owner,
+                              repo: context.repo.repo,
+                              issue_number: prs[0].number,
+                              body: "@coderabbitai review"})
+                      }

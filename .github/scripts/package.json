@@ -1,13 +1,16 @@
 {
   "name": "fix-comments",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
+    "@octokit/rest": "^21.1.1",
     "groq-sdk": "^1.1.1",
-    "octokit": "^5.0.5"
+    "octokit": "^5.0.5",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.37",
     "ts-node": "^10.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.9.3"
   }
 }
