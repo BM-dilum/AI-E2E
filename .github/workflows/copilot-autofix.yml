@@ -3,11 +3,10 @@ name: Copilot Auto Fix
 on:
     pull_request_review:
         types: [submitted]
+
 jobs:
     auto-fix:
-        if: |
-            (github.event_name == 'pull_request_review' && 
-            contains(github.event.review.user.login, '@coderabbit'))
+        if: contains(github.event.review.user.login, 'coderabbit')
 
         runs-on: ubuntu-latest
         steps:
@@ -15,6 +14,46 @@ jobs:
               run: |
                   echo "Event: ${{ github.event_name }}"                  
                   echo "User: ${{ github.event.review.user.login  }}"
+
+            - name: Collect code rabbit comments
+              uses: actions/github-script@v7
+              env:
+                  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  script: |
+                      //get all review commnets
+                      const {data: comments} = await github.rest.pulls.listReviewComments({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          pull_number: context.payload.pull_request.number
+                      });
+
+                      //filter only coderabbit comments
+                      const coderabbitComments = comments.filter(c => c.user.login.includes("coderabbit"))
+
+                      if (coderabbitComments.length === 0) {
+                          console.log("No CodeRabbit commnets found")
+                          return
+                      }
+                       
+                      //build summery of all comments
+                      const commentSummary = coderabbitComments.map((c,i) => 
+                        `{i+1}. File: ${c.path} Line: ${c.line}\n Issue: ${c.body}`
+                      ).join("\n")
+
+                      //post structured message for copilot
+                      await github.rest.issues.createComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: context.payload.pull_request.number,
+                        body: [
+                                '@copilot please fix the following issues raised by CodeRabbit:',
+                                '',
+                                commentSummary,
+                                '',
+                                'Fix all issues above and push in a single commit to this branch.'
+                            ].join('\n')})
 
             - name: Trigger Copilot to fix review comments
               uses: actions/github-script@v7
