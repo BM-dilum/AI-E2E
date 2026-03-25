@@ -48,12 +48,12 @@ describe("PiggyBank", function () {
         to: await piggyBank.getAddress(),
         value: amount,
       });
-      
+
       const balanceBefore = await owner.provider!.getBalance(owner.address);
       const tx = await piggyBank.withdraw();
       const receipt = await tx.wait();
       const gasCost = receipt!.gasUsed * receipt!.gasPrice;
-      
+
       const balanceAfter = await owner.provider!.getBalance(owner.address);
       expect(balanceAfter).to.equal(balanceBefore + amount - gasCost);
     });
@@ -64,7 +64,7 @@ describe("PiggyBank", function () {
         to: await piggyBank.getAddress(),
         value: amount,
       });
-      
+
       await piggyBank.withdraw();
       const balance = await piggyBank.getBalance();
       expect(balance).to.equal(0);
@@ -76,7 +76,7 @@ describe("PiggyBank", function () {
         to: await piggyBank.getAddress(),
         value: amount,
       });
-      
+
       const balance = await piggyBank.getBalance();
       expect(balance).to.equal(amount);
     });
@@ -84,9 +84,9 @@ describe("PiggyBank", function () {
 
   describe("Failure Cases", function () {
     it("zero deposit reverts", async function () {
-      await expect(
-        piggyBank.deposit({ value: 0 })
-      ).to.be.revertedWith("No ETH sent");
+      await expect(piggyBank.deposit({ value: 0 })).to.be.revertedWith(
+        "No ETH sent",
+      );
     });
 
     it("non owner withdraw reverts", async function () {
@@ -95,9 +95,9 @@ describe("PiggyBank", function () {
         to: await piggyBank.getAddress(),
         value: amount,
       });
-      
+
       await expect(piggyBank.connect(other).withdraw()).to.be.revertedWith(
-        "Not owner"
+        "Not owner",
       );
     });
 
@@ -113,7 +113,7 @@ describe("PiggyBank", function () {
         owner.sendTransaction({
           to: await piggyBank.getAddress(),
           value: amount,
-        })
+        }),
       )
         .to.emit(piggyBank, "Deposited")
         .withArgs(owner.address, amount);
@@ -125,7 +125,7 @@ describe("PiggyBank", function () {
         to: await piggyBank.getAddress(),
         value: amount,
       });
-      
+
       await expect(piggyBank.withdraw())
         .to.emit(piggyBank, "Withdrawn")
         .withArgs(owner.address, amount);
@@ -135,7 +135,7 @@ describe("PiggyBank", function () {
       const PiggyBank = await ethers.getContractFactory("PiggyBank");
       const newPiggyBank = await PiggyBank.deploy();
       await newPiggyBank.waitForDeployment();
-      
+
       // Event is emitted during deployment
       expect(newPiggyBank).to.not.be.null;
     });
