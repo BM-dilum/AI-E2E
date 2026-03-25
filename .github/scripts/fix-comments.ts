@@ -10,6 +10,7 @@ const owner = process.env.REPO_OWNER as string;
 const repo = process.env.REPO_NAME as string;
 const prNumber = parseInt(process.env.PR_NUMBER as string);
 const branch = process.env.BRANCH as string;
+const repoRoot = process.env.REPO_ROOT as string;
 
 interface Issue {
   line: number;
@@ -42,7 +43,6 @@ async function run(): Promise<void> {
   console.log(`📥 Found ${coderabbitComments.length} CodeRabbit comments`);
 
   //step 2: group comments by files
-
   const byFile: FileIssues = {};
   for (const comment of coderabbitComments) {
     if (!byFile[comment.path]) byFile[comment.path] = [];
@@ -52,6 +52,8 @@ async function run(): Promise<void> {
     });
   }
 
+  console.log("🧾 coderabbit-comments: ", coderabbitComments);
+
   const fixedFiles: string[] = [];
 
   //step 3.fix each file
@@ -59,7 +61,8 @@ async function run(): Promise<void> {
     console.log(`🕖 Processing ${filePath} — ${issues.length} issue(s)`);
 
     try {
-      const localPath = path.join(process.cwd(), filePath);
+      const localPath = path.join(repoRoot, filePath);
+      console.log("📁 fixing file at ", localPath);
       const fileContent = fs.readFileSync(localPath, "utf8");
 
       // read file from Github
@@ -130,6 +133,26 @@ async function run(): Promise<void> {
 
       fixedFiles.push(filePath);
       console.log(`✅ Fixed and pushed ${filePath}`);
+
+      if (fixedFiles.length > 0) {
+        await octokit.rest.issues.createComment({
+          owner,
+          repo,
+          issue_number: prNumber,
+          body: [
+            "## Auto Fix Complete ✅",
+            "",
+            `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
+            "",
+            "**Files fixed:**",
+            ...fixedFiles.map((f) => `- \`${f}\``),
+            "",
+            "CodeRabbit will re-review shortly.",
+          ].join("\n"),
+        });
+      }
+
+      console.log(`Done — fixed ${fixedFiles.length} files`);
     } catch (error) {
       if (error instanceof Error) {
         console.error(`❌ Failed to fix ${filePath}: ${error.message}`);

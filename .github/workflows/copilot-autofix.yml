@@ -43,6 +43,7 @@ jobs:
                   BRANCH: ${{ github.event.pull_request.head.ref }}
                   REPO_OWNER: ${{ github.repository_owner }}
                   REPO_NAME: ${{ github.event.repository.name }}
+                  REPO_ROOT: ${{ github.workspace }}
               run: |
                   cd .github/scripts 
                   npx tsx fix-comments.ts
