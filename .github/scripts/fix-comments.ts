@@ -1,5 +1,7 @@
 import Groq from "groq-sdk";
 import { Octokit } from "octokit";
+import * as fs from "fs";
+import * as path from "path";
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -57,6 +59,9 @@ async function run(): Promise<void> {
     console.log(`🕖 Processing ${filePath} — ${issues.length} issue(s)`);
 
     try {
+      const localPath = path.join(process.cwd(), filePath);
+      const fileContent = fs.readFileSync(localPath, "utf8");
+
       // read file from Github
       const { data: fileData } = await octokit.rest.repos.getContent({
         owner,
@@ -69,10 +74,6 @@ async function run(): Promise<void> {
         console.error(`❌ ${filePath} is not a file — skipping`);
         continue;
       }
-
-      const fileContent = Buffer.from(fileData.content, "base64").toString(
-        "utf8",
-      );
 
       // format issues
       const issueList = issues
@@ -113,17 +114,8 @@ async function run(): Promise<void> {
         continue;
       }
 
-      //push file back to github
-
-      await octokit.rest.repos.createOrUpdateFileContents({
-        owner,
-        repo,
-        path: filePath,
-        message: `fix: address CodeRabbit comments in ${filePath}`,
-        content: Buffer.from(fixedContent).toString("base64"),
-        sha: fileData.sha,
-        branch,
-      });
+      // write to the localfile
+      fs.writeFileSync(localPath, fixedContent, "utf8");
 
       fixedFiles.push(filePath);
       console.log(`✅ Fixed and pushed ${filePath}`);
