@@ -223,23 +223,23 @@ async function run(): Promise<void> {
         console.log(`💬 Replied to comment ${comment.id}`);
 
         //resolve the thread
-        const threadId = threadMap.get(comment.id);
-        if (threadId) {
-          await octokit.graphql(
-            `
-          mutation resolveThread($threadId: ID!) {
-            resolveReviewThread(input: { threadId: $threadId }) {
-              thread {
-                id
-                isResolved
-              }
-            }
-          }
-        `,
-            { threadId },
-          );
-        }
-        console.log(`✔️ Resolved thread for comment ${comment.id}`);
+        // const threadId = threadMap.get(comment.id);
+        // if (threadId) {
+        //   await octokit.graphql(
+        //     `
+        //   mutation resolveThread($threadId: ID!) {
+        //     resolveReviewThread(input: { threadId: $threadId }) {
+        //       thread {
+        //         id
+        //         isResolved
+        //       }
+        //     }
+        //   }
+        // `,
+        //     { threadId },
+        //   );
+        // }
+        // console.log(`✔️ Resolved thread for comment ${comment.id}`);
       } catch (error) {
         if (error instanceof Error) {
           console.error(
@@ -263,7 +263,11 @@ async function run(): Promise<void> {
         "**Files fixed:**",
         ...fixedFiles.map((f) => `- \`${f}\``),
         "",
+<<<<<<< Updated upstream
         "CodeRabbit will re-review shortly.",
+=======
+        "coderabbit ai will review soon..",
+>>>>>>> Stashed changes
       ].join("\n"),
     });
   }
