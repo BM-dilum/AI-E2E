@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 contract Voting {
@@ -14,6 +13,7 @@ contract Voting {
     event VotingStarted();
     event Voted(address voter, uint256 candidateId);
     event VotingStopped();
+    event WinnerDeclared(uint256 winnerId);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
@@ -32,6 +32,7 @@ contract Voting {
         require(bytes(name).length > 0, "Empty name");
         candidateCount++;
         candidates[candidateCount] = name;
+        votes[candidateCount] = 0;
         emit CandidateAdded(candidateCount, name);
     }
 
@@ -79,5 +80,12 @@ contract Voting {
             }
         }
         return winningId;
+    }
+
+    function declareWinner() public onlyOwner {
+        require(!votingOpen, "Voting still open");
+        require(candidateCount > 0, "No candidates");
+        uint256 winnerId = getWinner();
+        emit WinnerDeclared(winnerId);
     }
 }
