@@ -134,30 +134,30 @@ async function run(): Promise<void> {
       fixedFiles.push(filePath);
       console.log(`✅ Fixed and pushed ${filePath}`);
 
-      if (fixedFiles.length > 0) {
-        await octokit.rest.issues.createComment({
-          owner,
-          repo,
-          issue_number: prNumber,
-          body: [
-            "## Auto Fix Complete ✅",
-            "",
-            `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
-            "",
-            "**Files fixed:**",
-            ...fixedFiles.map((f) => `- \`${f}\``),
-            "",
-            "CodeRabbit will re-review shortly.",
-          ].join("\n"),
-        });
-      }
-
       console.log(`Done — fixed ${fixedFiles.length} files`);
     } catch (error) {
       if (error instanceof Error) {
         console.error(`❌ Failed to fix ${filePath}: ${error.message}`);
       }
     }
+  }
+
+  if (fixedFiles.length > 0) {
+    await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: prNumber,
+      body: [
+        "## Auto Fix Complete ✅",
+        "",
+        `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
+        "",
+        "**Files fixed:**",
+        ...fixedFiles.map((f) => `- \`${f}\``),
+        "",
+        "CodeRabbit will re-review shortly.",
+      ].join("\n"),
+    });
   }
 }
 
