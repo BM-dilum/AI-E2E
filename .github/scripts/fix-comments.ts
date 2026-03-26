@@ -184,24 +184,6 @@ async function run(): Promise<void> {
     }
   }
 
-  // if (fixedFiles.length > 0) {
-  //   await octokit.rest.issues.createComment({
-  //     owner,
-  //     repo,
-  //     issue_number: prNumber,
-  //     body: [
-  //       "## Auto Fix Complete ✅",
-  //       "",
-  //       `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
-  //       "",
-  //       "**Files fixed:**",
-  //       ...fixedFiles.map((f) => `- \`${f}\``),
-  //       "",
-  //       "CodeRabbit will re-review shortly.",
-  //     ].join("\n"),
-  //   });
-  // }
-
   if (fixedFiles.length === 0) {
     console.log("⚠️ No files were fixed — skipping commit and review trigger");
     process.exit(0);
