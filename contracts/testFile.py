@@ -1,2 +1,2 @@
-function test(text: str):
+def test(text: str):
     print(text)
