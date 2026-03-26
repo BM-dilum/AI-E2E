@@ -184,72 +184,6 @@ async function run(): Promise<void> {
     }
   }
 
-  // if (fixedFiles.length > 0) {
-  //   await octokit.rest.issues.createComment({
-  //     owner,
-  //     repo,
-  //     issue_number: prNumber,
-  //     body: [
-  //       "## Auto Fix Complete ✅",
-  //       "",
-  //       `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
-  //       "",
-  //       "**Files fixed:**",
-  //       ...fixedFiles.map((f) => `- \`${f}\``),
-  //       "",
-  //       "CodeRabbit will re-review shortly.",
-  //     ].join("\n"),
-  //   });
-  // }
-
-  if (fixedFiles.length === 0) {
-    console.log("⚠️ No files were fixed — skipping commit and review trigger");
-    process.exit(0);
-  }
-
-  // after fixing the file — reply to each comment
-  for (const comment of coderabbitComments) {
-    if (fixedFiles.includes(comment.path)) {
-      //reply to comment
-      try {
-        await octokit.rest.pulls.createReplyForReviewComment({
-          owner,
-          repo,
-          pull_number: prNumber,
-          comment_id: comment.id,
-          body: `✅ Fixed in commit \`fix: address CodeRabbit comments\``,
-        });
-
-        console.log(`💬 Replied to comment ${comment.id}`);
-
-        //resolve the thread
-        const threadId = threadMap.get(comment.id);
-        if (threadId) {
-          await octokit.graphql(
-            `
-          mutation resolveThread($threadId: ID!) {
-            resolveReviewThread(input: { threadId: $threadId }) {
-              thread {
-                id
-                isResolved
-              }
-            }
-          }
-        `,
-            { threadId },
-          );
-        }
-        console.log(`✔️ Resolved thread for comment ${comment.id}`);
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error(
-            `❌ Failed to reply/resolve comment ${comment.id}: ${error.message}`,
-          );
-        }
-      }
-    }
-  }
-
   if (fixedFiles.length > 0) {
     await octokit.rest.issues.createComment({
       owner,
@@ -262,8 +196,6 @@ async function run(): Promise<void> {
         "",
         "**Files fixed:**",
         ...fixedFiles.map((f) => `- \`${f}\``),
-        "",
-        "coderabbit ai will review soon..",
         "",
         "@coderabbitai review",
       ].join("\n"),
