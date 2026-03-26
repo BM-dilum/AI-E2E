@@ -1,2 +1,2 @@
-def test(text: str):
+def test(text: str) -> None:
     print(text)
