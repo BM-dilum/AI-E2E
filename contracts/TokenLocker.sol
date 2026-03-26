@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 contract TokenLocker {
@@ -39,7 +38,7 @@ contract TokenLocker {
         uint256 amount = lockedAmount;
         isLocked = false;
         lockedAmount = 0;
-        (bool success, ) = owner.call{value: amount}("");
+        (bool success, ) = payable(owner).call{value: amount}("");
         require(success, "Transfer failed");
         emit Unlocked(msg.sender, amount);
     }

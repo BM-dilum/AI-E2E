@@ -7,7 +7,7 @@ describe("TokenLocker", function () {
     const [owner, other] = await hre.ethers.getSigners();
     const TokenLocker = await hre.ethers.getContractFactory("TokenLocker");
     const tokenLocker = await TokenLocker.deploy();
-    await tokenLocker.waitForDeployment();
+    await tokenLocker.deployed();
     return { tokenLocker, owner, other };
   }
 
@@ -115,7 +115,7 @@ describe("TokenLocker", function () {
       const [owner] = await hre.ethers.getSigners();
       const TokenLocker = await hre.ethers.getContractFactory("TokenLocker");
       const deployTx = await TokenLocker.deploy();
-      const receipt = await deployTx.deploymentTransaction()?.wait();
+      const receipt = await deployTx.wait();
 
       const iface = new hre.ethers.Interface(["event OwnerSet(address owner)"]);
       const event = receipt?.logs.find((log) => {
