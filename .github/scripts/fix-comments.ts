@@ -129,7 +129,7 @@ async function run(): Promise<void> {
 
       //send groq to fixing
       const response = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: "llama-3.1-8b-instant",
         max_completion_tokens: 4096,
         temperature: 0.1,
         messages: [
