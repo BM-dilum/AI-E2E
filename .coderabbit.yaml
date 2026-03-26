@@ -1,5 +1,6 @@
 language: en
 reviews:
+  profile: assertive
   auto_review:
     enabled: true
     auto_incremental_review: true
