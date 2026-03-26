@@ -6,7 +6,7 @@ on:
 
 jobs:
     auto-fix:
-        if: contains(github.event.review.user.login, 'coderabbit') && github.event.review.state == 'changes_requested'
+        if: contains(github.event.review.user.login, 'coderabbit') && github.event.review.state != 'approved'
         runs-on: ubuntu-latest
         steps:
             - name: Checkout,
