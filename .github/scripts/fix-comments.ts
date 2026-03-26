@@ -202,6 +202,11 @@ async function run(): Promise<void> {
   //   });
   // }
 
+  if (fixedFiles.length === 0) {
+    console.log("⚠️ No files were fixed — skipping commit and review trigger");
+    process.exit(0);
+  }
+
   // after fixing the file — reply to each comment
   for (const comment of coderabbitComments) {
     if (fixedFiles.includes(comment.path)) {
