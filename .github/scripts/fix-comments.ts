@@ -205,6 +205,13 @@ async function run(): Promise<void> {
       issue_number: prNumber,
       body: "@coderabbitai review",
     });
+
+    await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: prNumber,
+      body: "@coderabbitai review",
+    });
   }
 }
 
