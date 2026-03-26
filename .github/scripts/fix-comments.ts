@@ -15,9 +15,50 @@ const repoRoot = process.env.REPO_ROOT as string;
 interface Issue {
   line: number;
   body: string;
+  comment_id: number;
 }
 interface FileIssues {
   [filePath: string]: Issue[];
+}
+
+async function getThreadIds(): Promise<Map<number, string>> {
+  const threadMap = new Map<number, string>();
+
+  const query = `
+      query getThreads($owner: String!, $repo: String!, $prNumber: Int!) {
+      repository(owner: $owner, name: $repo) {
+        pullRequest(number: $prNumber) {
+          reviewThreads(first: 100) {
+            nodes {
+              id
+              isResolved
+              comments(first: 1) {
+                nodes {
+                  databaseId
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    `;
+
+  const result: any = await octokit.graphql(query, {
+    owner,
+    repo,
+    prNumber,
+  });
+
+  const threads = result.repository.pullRequest.reviewThreads.nodes;
+  for (const thread of threads) {
+    if (thread.comments.nodes.length > 0) {
+      const commentId = thread.comments.nodes[0].databaseId;
+      threadMap.set(commentId, thread.id);
+    }
+  }
+
+  return threadMap;
 }
 
 async function run(): Promise<void> {
@@ -42,6 +83,8 @@ async function run(): Promise<void> {
 
   console.log(`📥 Found ${coderabbitComments.length} CodeRabbit comments`);
 
+  const threadMap = await getThreadIds();
+
   //step 2: group comments by files
   const byFile: FileIssues = {};
   for (const comment of coderabbitComments) {
@@ -49,10 +92,9 @@ async function run(): Promise<void> {
     byFile[comment.path].push({
       line: comment.line ?? 0,
       body: comment.body,
+      comment_id: comment.id,
     });
   }
-
-  console.log("🧾 coderabbit-comments: ", coderabbitComments);
 
   const fixedFiles: string[] = [];
 
@@ -134,30 +176,91 @@ async function run(): Promise<void> {
       fixedFiles.push(filePath);
       console.log(`✅ Fixed and pushed ${filePath}`);
 
-      if (fixedFiles.length > 0) {
-        await octokit.rest.issues.createComment({
-          owner,
-          repo,
-          issue_number: prNumber,
-          body: [
-            "## Auto Fix Complete ✅",
-            "",
-            `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
-            "",
-            "**Files fixed:**",
-            ...fixedFiles.map((f) => `- \`${f}\``),
-            "",
-            "CodeRabbit will re-review shortly.",
-          ].join("\n"),
-        });
-      }
-
       console.log(`Done — fixed ${fixedFiles.length} files`);
     } catch (error) {
       if (error instanceof Error) {
         console.error(`❌ Failed to fix ${filePath}: ${error.message}`);
       }
     }
+  }
+
+  // if (fixedFiles.length > 0) {
+  //   await octokit.rest.issues.createComment({
+  //     owner,
+  //     repo,
+  //     issue_number: prNumber,
+  //     body: [
+  //       "## Auto Fix Complete ✅",
+  //       "",
+  //       `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
+  //       "",
+  //       "**Files fixed:**",
+  //       ...fixedFiles.map((f) => `- \`${f}\``),
+  //       "",
+  //       "CodeRabbit will re-review shortly.",
+  //     ].join("\n"),
+  //   });
+  // }
+
+  // after fixing the file — reply to each comment
+  for (const comment of coderabbitComments) {
+    if (fixedFiles.includes(comment.path)) {
+      //reply to comment
+      try {
+        await octokit.rest.pulls.createReplyForReviewComment({
+          owner,
+          repo,
+          pull_number: prNumber,
+          comment_id: comment.id,
+          body: `✅ Fixed in commit \`fix: address CodeRabbit comments\``,
+        });
+
+        console.log(`💬 Replied to comment ${comment.id}`);
+
+        //resolve the thread
+        const threadId = threadMap.get(comment.id);
+        if (threadId) {
+          await octokit.graphql(
+            `
+          mutation resolveThread($threadId: ID!) {
+            resolveReviewThread(input: { threadId: $threadId }) {
+              thread {
+                id
+                isResolved
+              }
+            }
+          }
+        `,
+            { threadId },
+          );
+        }
+        console.log(`✔️ Resolved thread for comment ${comment.id}`);
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error(
+            `❌ Failed to reply/resolve comment ${comment.id}: ${error.message}`,
+          );
+        }
+      }
+    }
+  }
+
+  if (fixedFiles.length > 0) {
+    await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: prNumber,
+      body: [
+        "## Auto Fix Complete ✅",
+        "",
+        `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
+        "",
+        "**Files fixed:**",
+        ...fixedFiles.map((f) => `- \`${f}\``),
+        "",
+        "CodeRabbit will re-review shortly.",
+      ].join("\n"),
+    });
   }
 }
 

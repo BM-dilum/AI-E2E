@@ -63,19 +63,10 @@ jobs:
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN}}
                   script: |
-                      const branch = context.ref.replace("refs/heads/", "")
+                      const prNumber = context.payload.pull_request.number
 
-                      const {data: prs} = await github.rest.pulls.list({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          head: context.repo.owner + ":" + branch,
-                          state: "open"
-                      })
-
-                      if (prs.length > 0) {
                           await github.rest.issues.createComment({
                               owner: context.repo.owner,
                               repo: context.repo.repo,
-                              issue_number: prs[0].number,
+                              issue_number: prNumber,
                               body: "@coderabbitai review"})
-                      }
