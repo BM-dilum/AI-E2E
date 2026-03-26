@@ -263,11 +263,7 @@ async function run(): Promise<void> {
         "**Files fixed:**",
         ...fixedFiles.map((f) => `- \`${f}\``),
         "",
-<<<<<<< Updated upstream
-        "CodeRabbit will re-review shortly.",
-=======
         "coderabbit ai will review soon..",
->>>>>>> Stashed changes
       ].join("\n"),
     });
   }
