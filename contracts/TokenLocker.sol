@@ -38,7 +38,7 @@ contract TokenLocker {
         uint256 amount = lockedAmount;
         isLocked = false;
         lockedAmount = 0;
-        (bool success, ) = payable(owner).call{value: amount}("");
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Transfer failed");
         emit Unlocked(msg.sender, amount);
     }

@@ -30,7 +30,7 @@ describe("TokenLocker", function () {
     it("owner can lock ETH with duration", async function () {
       const { tokenLocker, owner } = await loadFixture(deployFixture);
       const amount = hre.ethers.parseEther("1.0");
-      const duration = 3600; // 1 hour
+      const duration = 3600; 
       await tokenLocker.connect(owner).lock(duration, { value: amount });
       expect(await tokenLocker.isLocked()).to.equal(true);
     });
@@ -138,7 +138,6 @@ describe("TokenLocker", function () {
       await expect(
         tokenLocker.connect(owner).lock(duration, { value: amount })
       ).to.be.revertedWith("Already locked");
-      // Verify the event was emitted during the first lock
       const iface = new hre.ethers.Interface([
         "event Locked(address owner, uint256 amount, uint256 unlockTime)",
       ]);
