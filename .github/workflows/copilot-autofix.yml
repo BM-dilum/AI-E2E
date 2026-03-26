@@ -53,6 +53,7 @@ jobs:
                   git add .
                   git diff --staged --quiet || git commit -m "fix: address CodeRabbit comments"  
                   git push origin ${{ github.event.pull_request.head.ref }}
+<<<<<<< Updated upstream
 
             - name: Trigger CodeRabbit Review
               if: steps.fix.outputs.fixed == 'true'
@@ -69,3 +70,5 @@ jobs:
                               repo: context.repo.repo,
                               issue_number: prNumber,
                               body: "@coderabbitai review"})
+=======
+>>>>>>> Stashed changes
