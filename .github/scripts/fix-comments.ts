@@ -123,7 +123,7 @@ async function run(): Promise<void> {
       // format issues
       const issueList = issues
         .map((issue, i) => {
-          `Issue ${i + 1} at line ${issue.line}:\n ${issue.body}`;
+          return `Issue ${i + 1} at line ${issue.line}:\n ${issue.body}`;
         })
         .join("\n\n----\n\n");
 
