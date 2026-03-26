@@ -184,24 +184,6 @@ async function run(): Promise<void> {
     }
   }
 
-  // if (fixedFiles.length > 0) {
-  //   await octokit.rest.issues.createComment({
-  //     owner,
-  //     repo,
-  //     issue_number: prNumber,
-  //     body: [
-  //       "## Auto Fix Complete ✅",
-  //       "",
-  //       `Fixed **${fixedFiles.length}** file(s) based on CodeRabbit comments.`,
-  //       "",
-  //       "**Files fixed:**",
-  //       ...fixedFiles.map((f) => `- \`${f}\``),
-  //       "",
-  //       "CodeRabbit will re-review shortly.",
-  //     ].join("\n"),
-  //   });
-  // }
-
   if (fixedFiles.length === 0) {
     console.log("⚠️ No files were fixed — skipping commit and review trigger");
     process.exit(0);
@@ -223,23 +205,23 @@ async function run(): Promise<void> {
         console.log(`💬 Replied to comment ${comment.id}`);
 
         //resolve the thread
-        const threadId = threadMap.get(comment.id);
-        if (threadId) {
-          await octokit.graphql(
-            `
-          mutation resolveThread($threadId: ID!) {
-            resolveReviewThread(input: { threadId: $threadId }) {
-              thread {
-                id
-                isResolved
-              }
-            }
-          }
-        `,
-            { threadId },
-          );
-        }
-        console.log(`✔️ Resolved thread for comment ${comment.id}`);
+        // const threadId = threadMap.get(comment.id);
+        // if (threadId) {
+        //   await octokit.graphql(
+        //     `
+        //   mutation resolveThread($threadId: ID!) {
+        //     resolveReviewThread(input: { threadId: $threadId }) {
+        //       thread {
+        //         id
+        //         isResolved
+        //       }
+        //     }
+        //   }
+        // `,
+        //     { threadId },
+        //   );
+        // }
+        // console.log(`✔️ Resolved thread for comment ${comment.id}`);
       } catch (error) {
         if (error instanceof Error) {
           console.error(
@@ -263,7 +245,7 @@ async function run(): Promise<void> {
         "**Files fixed:**",
         ...fixedFiles.map((f) => `- \`${f}\``),
         "",
-        "CodeRabbit will re-review shortly.",
+        "coderabbit ai will review soon..",
       ].join("\n"),
     });
   }
