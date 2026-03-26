@@ -196,8 +196,6 @@ async function run(): Promise<void> {
         "",
         "**Files fixed:**",
         ...fixedFiles.map((f) => `- \`${f}\``),
-        "",
-        "@coderabbitai review",
       ].join("\n"),
     });
 
