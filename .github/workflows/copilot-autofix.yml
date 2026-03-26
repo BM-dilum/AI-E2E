@@ -6,9 +6,8 @@ on:
 
 jobs:
     auto-fix:
-        if: contains(github.event.review.user.login, 'coderabbit')
+        if: contains(github.event.review.user.login, 'coderabbit') && github.event.review.state != 'approved'
         runs-on: ubuntu-latest
-
         steps:
             - name: Checkout,
               uses: actions/checkout@v4
@@ -56,7 +55,7 @@ jobs:
                   git push origin ${{ github.event.pull_request.head.ref }}
 
             - name: Trigger CodeRabbit Review
-              if: success()
+              if: steps.fix.outputs.fixed == 'true'
               uses: actions/github-script@v7
               env:
                   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
